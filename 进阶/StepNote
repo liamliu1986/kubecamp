@@ -1,0 +1,12 @@
+高可用部署：
+
+    高可用集群基于Vip提供外部负载均衡机制
+
+    基础环境： kubecamp-with-docker-env
+
+    预计：
+        lvs 负载均衡VIP 
+
+        3 master without worker 
+
+        

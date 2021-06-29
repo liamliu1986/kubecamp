@@ -1,0 +1,28 @@
+api_version: str
+kind: str
+metadata: V1ObjectMeta
+spec: 
+  pod_management_policy: OrderedReady/Parallel
+  replicas: int
+  revision_history_limit: int
+  selector: V1LabelSelector
+  service_name: str
+  template:
+    metadata: V1ObjectMeta
+    spec: V1PodSpec
+  update_strategy: V1beta2StatefulSetUpdateStrategy
+  volume_claim_templates: 
+    api_version: str
+    kind: str 
+    metadata: V1ObjectMeta
+    spec: 
+      access_modes: list[str]  
+      data_source:
+        kind: str
+        name: str
+      resources: V1ResourceRequirements
+      selector: V1LabelSelector
+      storage_class_name: str
+      volume_mode: Filesystem/Block
+      volume_name: str
+status: V1beta2StatefulSetStatus

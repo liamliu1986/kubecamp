@@ -1,0 +1,100 @@
+version: "3.8"
+services:
+  db:
+    image: registry/image:tag
+    command: list[str] # ["arg1","arg2","arg3"]
+    configs: 
+    - source: my_config
+      target: /filepath
+      uid: '103'
+      gid: '103'
+      mode: 0440
+    dns: 8.8.8.8
+    dns_search:
+    - dc1.example.com
+    - dc2.example.com
+    entrypoint: mariadb 
+    env_file:
+    - ./common.env
+    - ./apps/web.env
+    - /opt/runtime_opts.env
+    environment:
+      RACK_ENV: development
+      SHOW: 'true'
+    expose:
+    - "3000"
+    - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: syslog/json-file/none
+      options:
+        syslog-address: "tcp://192.168.0.42:123"
+        max-size: "200k"
+        max-file: "10"
+    volumes:
+      - "/var/run/postgres/postgres.sock:/var/run/postgres/postgres.sock"
+      - "dbdata:/var/lib/postgresql/data"
+      - "example:/var/lib/example"
+  web: 
+    image: registry/image:tag
+    command: list[str]
+    depends_on: 
+    - db 
+    deploy:
+      mode: replicated/global
+      replicas: 2
+      rollback_config:
+        parallelism: 2
+        delay: 10s
+        order: stop-first         
+      update_config:
+        parallelism: 2
+        delay: 10s
+        order: stop-first      
+      endpoint_mode: vip/dnsrr
+      resources:
+        limits: 
+          cpus: '0.5'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+      restart_policy: 
+        condition: on-failure/none/any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    netwokrs:
+      app_net:
+        ipv4_address: 172.16.238.10
+        ipv6_address: 2001:3984:3989::10
+    ports:
+    - target: 80
+      published: 8080
+      protocol: tcp
+      mode: host/ingress（swarm模式）
+configs:
+  my_config:
+    file: ./my_config.conf
+secrets:
+  my_secret:
+    file: ./my_secret.txt
+networks:
+  app_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.16.238.0/24"
+        - subnet: "2001:3984:3989::/64"
+volumes:
+  dbdata:
+  example:
+    driver_opts:
+      type: "nfs"
+      o: "addr=10.40.0.199,nolock,soft,rw"
+      device: ":/docker/example"

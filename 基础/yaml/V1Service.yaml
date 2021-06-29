@@ -1,0 +1,16 @@
+api_version: str
+kind: str
+metadata: V1ObjectMeta
+spec: 
+  cluster_ip: str
+  external_i_ps: list[str]
+  external_name: str
+  ports: 
+  - name: str
+    node_port: int
+    port: int
+    protocol: str
+    target_port: int
+  selector: dict(str, str)
+  type: ExternalName/ClusterIP/NodePort/LoadBalancer 
+status: V1ServiceStatus

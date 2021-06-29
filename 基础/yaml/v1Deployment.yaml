@@ -1,0 +1,173 @@
+api_version: str
+kind: str
+metadata: 
+  annotations: dict(str, str)       
+  labels: dict(str, str)        # 灵活运用，是资源合理调度，和拓扑生成的基础
+  name: str
+  namespace: str
+spec: 
+  min_ready_seconds: int        # 预备时间，新建pod至少多久可用
+  paused: bool
+  progress_deadline_seconds: int    # 超时认定失败默认600
+  replicas: int                    # 副本数
+  revision_history_limit: int
+  selector: 
+    match_expressions:                  
+    - key: str
+      operator: str
+      values: list[str]
+    match_labels: dict(str, str)
+  strategy: 
+    type: str     # 默认RollingUpdate，可以是Recreate
+    rolling_update: 
+      max_surge: object                   # 设置30%，则生成130% old+new，停旧创新
+      max_unavailable: object             # 设置30%，则直接缩减70% 创新停旧 相对于期望值
+  template: 
+    metadata:
+      annotations: dict(str, str)
+      labels: dict(str, str)
+      name: str
+      namespace: str
+    spec: 
+      active_deadline_seconds: int    # 标记为failed且kill的容器，相对于startTime所能存在的时间
+      affinity: 
+        node_affinity: 
+          preferred_during_scheduling_ignored_during_execution:
+          - weight: int
+            preference:
+              match_expressions:
+              - key: str
+                operator: str
+                values: list[str]
+              match_fields: 
+              - key: str
+                operator: str
+                values: list[str]
+          required_during_scheduling_ignored_during_execution:
+            node_selector_terms: 
+              match_expressions:
+              - key: str
+                operator: str
+                values: list[str]
+              match_fields: 
+              - key: str
+                operator: str
+                values: list[str]
+        pod_affinity: 
+          preferred_during_scheduling_ignored_during_execution:
+          - weight: int
+            pod_affinity_term:
+              label_selector:
+                match_expressions: list[V1LabelSelectorRequirement]
+                match_labels: dict(str, str)
+              namespaces: list[str]
+              topology_key: str 
+        pod_anti_affinity: 
+          preferred_during_scheduling_ignored_during_execution: list[V1WeightedPodAffinityTerm]
+          required_during_scheduling_ignored_during_execution: list[V1PodAffinityTerm]
+      containers: 
+      - args: list[str]
+        name: str 
+        command: list[str]
+        env: list[V1EnvVar]
+        env_from: 
+          config_map_ref:
+            name: str
+            optional: bool
+          prefix: str
+          secret_ref:
+            name: str
+            optional: bool 
+        image: str 
+        image_pull_policy: str      # can be Always/Never/IfNotPresent
+        lifecycle:
+          post_start:
+            _exec: 
+              command: list[str]
+            http_get:
+              host: str
+              http_headers: 
+              - name: str
+                value: str
+              path: str
+              port: object
+              scheme: str       # 默认HTTP
+            tcp_socket: 
+              host: str
+              port: object 
+          pre_stop: V1Handler
+        liveness_probe: 
+          _exec: V1ExecAction
+          failure_threshold: int
+          http_get: V1HTTPGetAction
+          initial_delay_seconds: int
+          period_seconds: int
+          success_threshold: int
+          tcp_socket: 
+            host: str
+            port: object
+          timeout_seconds: int
+        readiness_probe: V1Probe
+        startup_probe: V1Probe
+        resources: 
+          limits: dict(str, str)
+          requests: dict(str, str)
+        security_context: 
+          allow_privilege_escalation: bool 
+          capabilities: 
+            add: str
+            drop: str
+          privileged: bool
+          proc_mount: str 
+          read_only_root_filesystem: bool
+          run_as_group: int
+          run_as_non_root: bool
+          run_as_user: int
+        volume_devices: 
+          device_path: str
+          name: str
+        volume_mounts:
+          mount_path: str
+          name: str
+          read_only: bool
+          sub_path: str
+        workdir: str
+      dns_config: 
+        nameservers: list[str]
+        options:
+          name: str
+          value: str
+        searches: list[str]
+      dns_policy: str   # can be ClusterFirst/ClusterFirstWithHostNet/None
+      host_ipc: bool
+      host_network: bool 
+      host_pid: bool
+      hostname: str
+      image_pull_secrets: 
+        name: str
+      init_containers: list[V1Container]
+      node_name: str
+      node_selector: dict(str, str)
+      readiness_gates: 
+      - condition_type: str 
+      restart_policy: str # can be Always/Never/OnFailure
+      tolerations: 
+      - effect: str # NoSchedule, PreferNoSchedule and NoExecute.
+        key: str 
+        operator: str
+        toleration_seconds: int 
+        value: str
+      volumes: list[V1Volume] # https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Volume.md
+status:
+  available_replicas: str
+  conditions: 
+  - last_transition_time: datetime
+    last_update_time: datetime
+    messages: str
+    reason: str
+    status: str
+    type: str
+  ready_replicas: int
+  replicas: int
+  unavailable_replicas: int
+  updated_replicas: int
