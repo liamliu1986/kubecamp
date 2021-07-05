@@ -1,12 +1,337 @@
-高可用部署：
+1.Kubernetes部署（实验环境，single node）
 
-    高可用集群基于Vip提供外部负载均衡机制
+    kubernetes复习：
 
-    基础环境： kubecamp-with-docker-env
+        docker：
+            container：
+                容器技术其实并不是一项新技术，但在其发展过程中停滞了一段时间。容器技术的发展伴随着计算机硬件、软件架构及计算机工程效能同步发展。
+                
+                计算机硬件：
+                    小型机/专用机 --> X86架构 --> 虚拟化 --> container --> kubernetes 
 
-    预计：
-        lvs 负载均衡VIP 
+                软件架构：
+                    单体应用 --> 垂直拆分(分层结构) --> SOA --> 微服务
 
-        3 master without worker 
+                工程效能：
+                    Lean Manufacturing --> Agile --> DevOps --> AIOps
 
-        
+                
+                虚拟化和容器化的区别：
+                    
+                    虚拟化：独立虚拟内核  
+                    容器化：共享内核，更小，更快，更灵活
+
+
+                核心机制：namespace，cgroups,AUFS
+
+
+
+                lxc --> go封装 --> docker --> kubernetes
+
+
+                image: 
+                    bootfs + rootfs + layers
+                    readonly and writealbe 
+
+                network: 
+                    bridge
+                    host
+                    Overlay
+                    macvaln
+                    （PPT）
+
+                volume: 
+                    volume      平台资源
+                    bindmount   非平台资源，不可通过volume进行管理
+
+                跨节点容器集群：
+                    docker swarm 
+
+                    service     副本集
+
+                    路由网格（PPT）
+
+                    docker stack:
+                        完成某一功能的一组services 
+
+        kubernetes：
+
+            容器编排：
+                混乱的容器 --> kubernetes --> 井然有序
+                目前已经成为容器编排的行业标准。
+
+            产生原因：
+                IaC，自动化，服务自治理，大规模编排快速环境构建，微服务需求
+
+            场景：
+                成熟的开发模式，成熟的持续集成管理，成熟的发布流程，成熟的产品价值流
+
+            使用：
+                原生kubernetes，Rancher--Kubernetes容器云平台，敏捷开发，DevOps实践
+
+            （PPT）
+
+            kubernetes优势：
+
+                服务发现和负载均衡              kube-proxy
+
+                持久化存储管理                 PV and PVC
+
+                自动部署与回滚                 Depoloyment
+
+                自动资源分配和调度              Kube-Scheduler
+
+                自我修复                      rc 
+
+                密钥和配置管理                 secret configmap
+
+                大规模服务编排                 helm,yaml
+
+                自动伸缩                      autoscale
+
+            (PPT)
+
+            核心组件：
+                api-server 
+
+                kubelet 
+
+                kube-proxy 
+
+                kube-scheduler
+
+                controller manager
+
+                etcdv3
+
+                cni 
+
+
+            资源：
+                network policy  
+
+                pod
+
+                RC  
+
+                Deployment  
+
+                StatefulSet  
+
+                DaemonSet 
+
+                Job
+
+                CronJob 
+
+                Service 
+
+                Ingress 
+
+                volumes
+
+                pv 
+
+                pvc
+
+        高可用集群部署：
+
+            基于base环境，docker已经部署完成。
+
+            部署：    
+                基本要求:
+                    关闭selinux（非必须）
+                    关闭防火墙（生产不推荐）
+                    修改hosts文件
+                    关闭swap（必须）
+                        echo "swapoff -a" >> /etc/profile && source /etc/profile
+                    修改内核参数（必须）
+                    docker部署完成（必须）
+                    ipvsadm安装，keepalived安装（本次部署使用ipvs）
+                        ipvs vs iptables : ipvs工作在内核空间，效率更高，iptables规则随pod数量增加，效率会降低
+
+                        yum install -y ipvsadm keepalived
+
+                        vim /etc/sysconfig/modules/ipvs.modules
+
+                            modprobe -- ip_vs
+                            modprobe -- ip_vs_rr
+                            modprobe -- ip_vs_wrr
+                            modprobe -- ip_vs_sh
+                            modprobe -- nf_conntrack_ipv4
+
+
+                        chmod +x /etc/sysconfig/modules/ipvs.modules
+                        . /etc/sysconfig/modules/ipvs.modules
+
+                        
+                        vim /etc/keepalived/keepalived.conf 
+
+                            ! Configuration File for keepalived
+
+                            global_defs {
+                            router_id LVS_DEVEL
+                            }
+
+                            vrrp_instance VI_1 {
+                                state MASTER
+                                interface ens33
+                                virtual_router_id 51
+                                priority 100
+                                advert_int 1
+                                authentication {
+                                    auth_type PASS
+                                    auth_pass 1111
+                                }
+                                virtual_ipaddress {
+                                    10.10.100.10
+                                }
+                            }
+
+                            virtual_server 10.10.100.10 6443 {
+                                delay_loop 6
+                                lb_algo rr
+                                lb_kind DR
+                                persistence_timeout 50
+                                protocol TCP
+
+                                real_server 10.10.100.130 6443 {
+                                    weight 1
+                                    TCP_CHECK {
+                                        connect_timeout 5
+                                        nb_get_retry 3
+                                        delay_before_retry 3
+                                        connect_port 6443
+                                    }
+                                }
+                                real_server 10.10.100.131 6443 {
+                                    weight 1
+                                    TCP_CHECK {
+                                        connect_timeout 5
+                                        nb_get_retry 3
+                                        delay_before_retry 3
+                                        connect_port 6443
+                                    }
+                                }
+                                real_server 10.10.100.132 6443 {
+                                    weight 1
+                                    TCP_CHECK {
+                                        connect_timeout 5
+                                        nb_get_retry 3
+                                        delay_before_retry 3
+                                        connect_port 6443
+                                    }
+                                }
+                            }
+                
+                kubeadm:
+
+                    编写kube-admin.yaml
+                        apiVersion: kubeadm.k8s.io/v1beta2
+                        kind: ClusterConfiguration
+                        kubernetesVersion: 1.21.0
+                        imageRepository: registry.cn-hangzhou.aliyuncs.com/google_containers
+                        clusterName: kubecamp
+                        controlPlaneEndpoint: "10.10.100.10:6443"
+                        networking:
+                            dnsDomain: kubecmap.com
+                            podSubnet: 192.168.150.0/24
+                            serviceSubnet: 192.168.151.0/24
+                        dns:
+                            type: CoreDNS
+                            imageRepository: coredns
+                            imageTag: 1.8.0
+
+                        ---
+                        apiVersion: kubeproxy.config.k8s.io/v1alpha1
+                        kind: KubeProxyConfiguration
+                        mode: ipvs
+
+                    kubeadm init --config=kubeadm-config.yaml --upload-certs     
+
+                部署完成
+                
+            部署calico网络：
+
+                安装CDR：
+
+                        kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+
+                安装用户资源：
+
+                    wget https://docs.projectcalico.org/manifests/custom-resources.yaml
+
+                    vim custom-resources.yaml
+
+                    # For more information, see: https://docs.projectcalico.org/v3.19/reference/installation/api#operator.tigera.io/v1.Installation
+                    apiVersion: operator.tigera.io/v1
+                    kind: Installation
+                    metadata:
+                    name: default
+                    spec:
+                    # Configures Calico networking.
+                    calicoNetwork:
+                        # Note: The ipPools section cannot be modified post-install.
+                        ipPools:
+                        - blockSize: 26
+                        cidr: 192.168.150.0/24
+                        encapsulation: IPIPCrossSubnet
+                        natOutgoing: Enabled
+                        nodeSelector: all()
+
+                至此，等待coredns启动完成，整个集群的部署就告一段落了，此时的集群已经可以应付大多数的服务，但仍存在缺陷，管理也不够便利，
+                尽管当前kubeadm部署方式因经非常方便，但对于用户而言CLI仍旧是较高的技术门槛
+
+                容器网络及calico概要
+
+                    容器网络的基本要求：
+                        1. pod无论运行在任何节点都可以互相直接通信，而不需要NAT地址转换
+                        2. node可以与pod通信，不受限制的情况下可以访问任意网络
+                        3. pod拥有独立的网络空间
+
+                    CNI插件的三种网络实现模式：
+
+                        1.大二层Overlay模式，隧道技术（Vxlan，IPIP）,calico,flannel
+                        2.三层路由（host-gw、BGP），calico，flannel 
+                        3.底层网络（BGP），强依赖底层网络的支持
+
+                    为什么选择calico？因为其支持kubernetes的network policy 
+
+                    默认node-to-node mesh,实现节点间的BGP，但是随着节点数的增加性能会下降，于是有calico reflector模式
+
+                    tunnel0用以实现跨网络pod通信，这时是需要封包通过隧道的
+                    （PPT）
+
+
+
+        为进一步降低kubernetes的部署门槛，市面上出现了大量的部署工具，kubernetes的管理平台，其中以Rancher功能最为完备设计最为合理
+
+        rancher介绍：
+            Rancher的本质是KaaS（Kubernetes as a service.）
+
+            rancher: --> Run K8s Everywhere
+                托管
+                导入
+
+            特性：
+                1. Rancher RBAC管理多个集群
+                2. 基于helm的应用商店
+                3. 多集群应用
+                4. 全局DNS  
+                5. Service Mesh 
+                6. 安全扫描
+                7. 集群模板
+                8. 基于OPA的策略管理
+
+            部署方式建议：
+                1. rancher部署于高可用Kubernetes集群（3节点kubernetes， 3节点k3s）
+                2. 专用kubernetes集群部署Rancher
+                3. 部署集群与业务集群分离
+
+                （PPT）
+
+            推荐架构：
+                k3s/k8s --> Rancher
+
+                Get helm：
+                    wget https://get.helm.sh/helm-v3.6.2-linux-amd64.tar.gz
