@@ -1,0 +1,19 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: 1.21.0
+imageRepository: registry.cn-hangzhou.aliyuncs.com/google_containers
+clusterName: kubecamp
+controlPlaneEndpoint: "10.10.100.10:6443"
+networking:
+    dnsDomain: kubecmap.com
+    podSubnet: 192.168.150.0/24
+    serviceSubnet: 192.168.151.0/24
+dns:
+    type: CoreDNS
+    imageRepository: coredns
+    imageTag: 1.8.0
+
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
