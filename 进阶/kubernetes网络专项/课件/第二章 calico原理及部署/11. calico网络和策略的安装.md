@@ -1,0 +1,110 @@
+参考链接： https://docs.projectcalico.org/v3.11/getting-started/kubernetes/installation/calico
+
+#### 0. 如果安装了flannel，执行如下
+
+```shell
+# 删除flannel
+$ kubectl delete -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+# 在node节点清理flannel网络留下的文件
+ifconfig cni0 down
+ip link delete cni0
+ifconfig flannel.1 down
+ip link delete flannel.1
+rm -rf /var/lib/cni/
+rm -f /etc/cni/net.d/*
+注：执行上面的操作，重启kubelet
+
+# 第三步，应用calico相关的yaml文件
+```
+
+#### 1. 安装的先决条件
+
+- kube-proxy: 配置为不运行 --masquerade-all选项，因为这与Calico冲突。
+
+- kubelet: 针对网络必须配置使用CNI插件。`--network-plugin=cni`
+
+- kube-proxy： 必须运行iptables的代理模式，这是默认选项。
+
+#### 2. 执行安装
+Calico是作为kubernetes集群的daemonset进行部署的。因此它确保了集群中的每个节点都会安装。
+
+
+1. 针对50个节点或小于50个节点的安装方法如下：
+
+- 下载calico.yaml文件
+```shell
+curl https://docs.projectcalico.org/v3.11/manifests/calico.yaml -O
+```
+
+- 假如使用`192.168.0.0/16`段的网络，直接跳过本步骤。假如使用别的网络，请取代下面的`192.168.0.0/16`
+
+```shell
+POD_CIDR="<your-pod-cidr>" \
+sed -i -e "s?192.168.0.0/16?$POD_CIDR?g" calico.yaml
+```
+
+- 使用下面命令应用manifest
+
+```shell
+kubectl apply -f calico.yaml
+```
+
+2. 针对超过50个节点的安装方法如下：
+
+- 下载calico.yaml文件
+
+```shell
+curl https://docs.projectcalico.org/v3.11/manifests/calico-typha.yaml -o calico.yaml
+```
+
+- - 假如使用`10.244.0.0/16`段的网络，直接跳过本步骤。假如使用别的网络，请取代下面的`10.244.0.0/16`
+
+```shell
+POD_CIDR="<your-pod-cidr>" \
+sed -i -e "s?10.244.0.0/16?$POD_CIDR?g" calico-typha.yaml
+```
+
+- 在Deployment中修改`replica`的数量。
+
+```shell
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: calico-typha
+  ...
+spec:
+  ...
+  replicas: <number of replicas>
+```
+
+>[warning]我们建议每200个节点至少有一个副本，不超过20个副本。在生产中，我们建议至少使用三个副本来减少滚动升级和故障的影响。副本的数量应该总是小于节点的数量，否则滚动升级将会停止。此外，只有当Typha实例少于节点时，Typha才有助于扩大规模
+
+- 应用清单文件
+
+```shell
+kubectl apply -f calico.yaml
+```
+
+3. 使用带有etcd数据存储的方式（就是使用外部的etcd存储，需要指定外部etcd存储的地址等信息）
+
+- 下载calico.yaml文件
+
+```shell
+curl https://docs.projectcalico.org/v3.11/manifests/calico-etcd.yaml -o calico.yaml
+```
+
+- 假如使用`10.244.0.0/16`段的网络，直接跳过本步骤。假如使用别的网络，请取代下面的`10.244.0.0/16`
+
+```shell
+POD_CIDR="<your-pod-cidr>" \
+sed -i -e "s?10.244.0.0/16?$POD_CIDR?g" calico-etcd.yaml
+```
+
+- 在名为calico-config的ConfigMap中，将etcd_endpoint的值设置为etcd服务器的IP地址和端口。
+
+- 应用清单文件
+
+```shell
+kubectl apply -f calico.yaml
+```
