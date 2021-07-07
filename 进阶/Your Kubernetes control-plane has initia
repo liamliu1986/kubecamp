@@ -16,9 +16,9 @@ Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
 
 You can now join any number of the control-plane node running the following command on each as root:
 
-  kubeadm join 10.10.100.10:6443 --token ikvo99.7md0ts16gqauhf50 \
-	--discovery-token-ca-cert-hash sha256:55eecb8413d5a57f2357716ff533158debf71eae07159056df0a5104fadf6356 \
-	--control-plane --certificate-key 6da78fa81ec409a74580acf07153e20a5cf82a8f7b945174f1ad2bc7a5027f12
+  kubeadm join 10.10.100.133:6443 --token ervqe5.lwu9qfiql6fynmfv \
+	--discovery-token-ca-cert-hash sha256:920142e0a6776d9665b473df0e0197347c878d95f755f07601563756dbef44c8 \
+	--control-plane --certificate-key d82f3aeebc09a633e16dd16e91a0c1c1e94d91e6b05dc86f862cf0ea568a96f5
 
 Please note that the certificate-key gives access to cluster sensitive data, keep it secret!
 As a safeguard, uploaded-certs will be deleted in two hours; If necessary, you can use
@@ -26,5 +26,5 @@ As a safeguard, uploaded-certs will be deleted in two hours; If necessary, you c
 
 Then you can join any number of worker nodes by running the following on each as root:
 
-kubeadm join 10.10.100.10:6443 --token ikvo99.7md0ts16gqauhf50 \
-	--discovery-token-ca-cert-hash sha256:55eecb8413d5a57f2357716ff533158debf71eae07159056df0a5104fadf6356 
+  kubeadm join 10.10.100.133:6443 --token ervqe5.lwu9qfiql6fynmfv \
+    --discovery-token-ca-cert-hash sha256:920142e0a6776d9665b473df0e0197347c878d95f755f07601563756dbef44c8 
