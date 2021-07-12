@@ -1,0 +1,116 @@
+高可用集群部署：
+
+            基于base环境，docker已经部署完成。
+
+            部署：    
+                基本要求:
+                    关闭selinux（非必须）
+                    关闭防火墙（生产不推荐）
+                    修改hosts文件
+                    关闭swap（必须）
+                        echo "swapoff -a" >> /etc/profile && source /etc/profile
+                    修改内核参数（必须）
+                    docker部署完成（必须）
+                    ipvsadm安装，keepalived安装（本次部署使用ipvs）
+                        ipvs vs iptables : ipvs工作在内核空间，效率更高，iptables规则随pod数量增加，效率会降低
+
+                        yum install -y ipvsadm keepalived
+
+                        vim /etc/sysconfig/modules/ipvs.modules
+
+                            modprobe -- ip_vs
+                            modprobe -- ip_vs_rr
+                            modprobe -- ip_vs_wrr
+                            modprobe -- ip_vs_sh
+                            modprobe -- nf_conntrack_ipv4
+
+
+                        chmod +x /etc/sysconfig/modules/ipvs.modules
+                        . /etc/sysconfig/modules/ipvs.modules
+
+                        
+                        vim /etc/keepalived/keepalived.conf 
+
+                            ! Configuration File for keepalived
+
+                            global_defs {
+                            router_id LVS_DEVEL
+                            }
+
+                            vrrp_instance VI_1 {
+                                state MASTER
+                                interface ens33
+                                virtual_router_id 51
+                                priority 100
+                                advert_int 1
+                                authentication {
+                                    auth_type PASS
+                                    auth_pass 1111
+                                }
+                                virtual_ipaddress {
+                                    10.10.100.10
+                                }
+                            }
+
+                            virtual_server 10.10.100.10 6443 {
+                                delay_loop 6
+                                lb_algo rr
+                                lb_kind DR
+                                persistence_timeout 50
+                                protocol TCP
+
+                                real_server 10.10.100.130 6443 {
+                                    weight 1
+                                    TCP_CHECK {
+                                        connect_timeout 5
+                                        nb_get_retry 3
+                                        delay_before_retry 3
+                                        connect_port 6443
+                                    }
+                                }
+                                real_server 10.10.100.131 6443 {
+                                    weight 1
+                                    TCP_CHECK {
+                                        connect_timeout 5
+                                        nb_get_retry 3
+                                        delay_before_retry 3
+                                        connect_port 6443
+                                    }
+                                }
+                                real_server 10.10.100.132 6443 {
+                                    weight 1
+                                    TCP_CHECK {
+                                        connect_timeout 5
+                                        nb_get_retry 3
+                                        delay_before_retry 3
+                                        connect_port 6443
+                                    }
+                                }
+                            }
+                
+                kubeadm:
+
+                    编写kube-admin.yaml
+                        apiVersion: kubeadm.k8s.io/v1beta2
+                        kind: ClusterConfiguration
+                        kubernetesVersion: 1.21.0
+                        imageRepository: registry.cn-hangzhou.aliyuncs.com/google_containers
+                        clusterName: kubecamp
+                        controlPlaneEndpoint: "10.10.100.10:6443"
+                        networking:
+                            dnsDomain: kubecmap.com
+                            podSubnet: 192.168.150.0/24
+                            serviceSubnet: 192.168.151.0/24
+                        dns:
+                            type: CoreDNS
+                            imageRepository: coredns
+                            imageTag: 1.8.0
+
+                        ---
+                        apiVersion: kubeproxy.config.k8s.io/v1alpha1
+                        kind: KubeProxyConfiguration
+                        mode: ipvs
+
+                    kubeadm init --config=kubeadm-config.yaml --upload-certs     
+
+                部署完成
