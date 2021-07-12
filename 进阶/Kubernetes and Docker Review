@@ -251,87 +251,8 @@
 
                 部署完成
                 
-            部署calico网络：
-
-                安装CDR：
-
-                        kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-
-                安装用户资源：
-
-                    wget https://docs.projectcalico.org/manifests/custom-resources.yaml
-
-                    vim custom-resources.yaml
-
-                    # For more information, see: https://docs.projectcalico.org/v3.19/reference/installation/api#operator.tigera.io/v1.Installation
-                    apiVersion: operator.tigera.io/v1
-                    kind: Installation
-                    metadata:
-                    name: default
-                    spec:
-                    # Configures Calico networking.
-                    calicoNetwork:
-                        # Note: The ipPools section cannot be modified post-install.
-                        ipPools:
-                        - blockSize: 26
-                        cidr: 192.168.150.0/24
-                        encapsulation: IPIPCrossSubnet
-                        natOutgoing: Enabled
-                        nodeSelector: all()
-
-                至此，等待coredns启动完成，整个集群的部署就告一段落了，此时的集群已经可以应付大多数的服务，但仍存在缺陷，管理也不够便利，
-                尽管当前kubeadm部署方式因经非常方便，但对于用户而言CLI仍旧是较高的技术门槛
-
-                容器网络及calico概要
-
-                    容器网络的基本要求：
-                        1. pod无论运行在任何节点都可以互相直接通信，而不需要NAT地址转换
-                        2. node可以与pod通信，不受限制的情况下可以访问任意网络
-                        3. pod拥有独立的网络空间
-
-                    CNI插件的三种网络实现模式：
-
-                        1.大二层Overlay模式，隧道技术（Vxlan，IPIP）,calico,flannel
-                        2.三层路由（host-gw、BGP），calico，flannel 
-                        3.底层网络（BGP），强依赖底层网络的支持
-
-                    为什么选择calico？因为其支持kubernetes的network policy 
-
-                    默认node-to-node mesh,实现节点间的BGP，但是随着节点数的增加性能会下降，于是有calico reflector模式
-
-                    tunnel0用以实现跨网络pod通信，这时是需要封包通过隧道的
-                    （PPT）
+           
 
 
 
-        为进一步降低kubernetes的部署门槛，市面上出现了大量的部署工具，kubernetes的管理平台，其中以Rancher功能最为完备设计最为合理
-
-        rancher介绍：
-            Rancher的本质是KaaS（Kubernetes as a service.）
-
-            rancher: --> Run K8s Everywhere
-                托管
-                导入
-
-            特性：
-                1. Rancher RBAC管理多个集群
-                2. 基于helm的应用商店
-                3. 多集群应用
-                4. 全局DNS  
-                5. Service Mesh 
-                6. 安全扫描
-                7. 集群模板
-                8. 基于OPA的策略管理
-
-            部署方式建议：
-                1. rancher部署于高可用Kubernetes集群（3节点kubernetes， 3节点k3s）
-                2. 专用kubernetes集群部署Rancher
-                3. 部署集群与业务集群分离
-
-                （PPT）
-
-            推荐架构：
-                k3s/k8s --> Rancher
-
-                Get helm：
-                    wget https://get.helm.sh/helm-v3.6.2-linux-amd64.tar.gz
+       
