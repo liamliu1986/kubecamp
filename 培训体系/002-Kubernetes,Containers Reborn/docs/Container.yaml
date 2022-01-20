@@ -1,0 +1,94 @@
+image: string 
+imagePullPolicy: string # Always,Never,IfNotPresent 
+command: []string 
+args: []string 
+workingDir: string 
+ports: 
+  containerPort: int32 
+  hostIP: string 
+  hostPort: int32 
+  name: string 
+  protocol: string 
+env: 
+‐ name: string
+  value: string
+  valueFrom: 
+    configMapKeyRef: 
+      key: string 
+      name: string 
+      optional: string 
+    fieldRef: 
+      fieldPath: string 
+      apiVersion: string 
+    resourceFieldRef: 
+      resource: string 
+      containerName: string 
+      divisor: Quantity 
+    secretKeyRef: 
+      key: string 
+      name: string 
+      optional: boolean
+envFrom: 
+  configMapRef: 
+    name: string 
+    optional: boolean 
+  prefix: string 
+  secretRef: 
+    name: string 
+    optional: boolean 
+volumeMounts: 
+  mountPath: string 
+  name: string 
+  mountPropagation: string 
+  readOnly: boolean 
+  subPath: string 
+  subPathExpr: string 
+volumeDevices: 
+  devicePath: string 
+  name: string 
+resources: 
+  limits: map[string]Quantity 
+  requests: map[string]Quantity 
+lifecycle: 
+  postStart: 
+    exec: 
+      command: []string 
+    httpGet: 
+      port: IntOrString 
+      host: string 
+      httpHeaders: 
+      ‐ name: string 
+        value: string 
+      path: string 
+      scheme: HTTP 
+    tcpSocket: 
+      port: IntOrString 
+      host: string 
+    preStop: Handler 
+terminationMessagePath: string 
+terminationMessagePolicy: string 
+livenessProbe: Probe 
+readinessProbe: Probe 
+startupProbe: 
+  exec: 
+    command: []string 
+  httpGet: 
+    port: IntOrString 
+    host: string 
+    httpHeaders: 
+      name: string 
+      value: string 
+    path: string 
+    scheme: string 
+  tcpSocket: 
+    port: IntOrString 
+    host: string 
+  initialDelaySeconds: int32 
+  terminationGracePeriodSeconds: int64 
+  periodSeconds: int32
+  timeoutSeconds: int32 
+  failureThreshold: int32 
+  successThreshold: int32 
+stdin: boolean 
+stdinOnce: boolean 
+tty: boolean
