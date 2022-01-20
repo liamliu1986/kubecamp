@@ -31,7 +31,7 @@ services:
 version: "3.8"
 services: 
   appname:
-    command: ["sleep", "30"] or sleep 30    # 覆盖镜像default command
+    command: ["sleep", "30"]     # 覆盖镜像default command
 
 
 # configs

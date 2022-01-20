@@ -1,0 +1,81 @@
+containers: []Container,required 
+initContainers: []Container
+imagePullSecrets: []LocalObjectReference 
+enableServiceLinks: boolean 
+volumes: []Volume 
+nodeSelector: map[string]string 
+nodeName: string 
+affinity: 
+  nodeAffinity: 
+    preferredDuringSchedulingIgnoredDuringExecution: 
+    ‐ preference: 
+      matchExpressions: []NodeSelectorRequirement 
+      matchFields: []NodeSelectorRequirement 
+      weight: int32 
+    requiredDuringSchedulingIgnoredDuringExecution: 
+    ‐ matchExpressions: []NodeSelectorRequirement 
+      matchFields: []NodeSelectorRequirement 
+  podAffinity: PodAffinity 
+  podAntiAffinity: PodAntiAffinity 
+tolerations: 
+‐ key: string 
+  operator: string # Exists,Equal 
+  value: string 
+  effect: string 
+  tolerationSeconds: int64 
+schedulerName: string 
+runtimeClassName: string 
+priorityClassName: string 
+priority: int32 
+topologySpreadConstraints: 
+  maxSkew: int32 # Pod不均匀分布的程度 
+  topologyKey: string # 拓扑结构lable（On Node），具有相同key，value视为同一图拓扑 
+  whenUnsatisfiable: string #指出如何处理不满足约束的情况DoNotSchedule,ScheduleAnyway 
+  labelSelector: LabelSelector 
+restartPolicy: string # Always,OnFailure,Never 
+terminationGracePeriodSeconds: int64 # TERM racefully持续时间 
+activeDeadlineSeconds： int64 
+readinessGates: 
+  conditionType: string 
+hostnme: string 
+setHostnameAsFQDN: booleansubdomain 
+subdomain: string 
+hostAliases: 
+‐ hostnames: []string 
+  ip: string 
+dnsConfig: 
+  nameservers: []string 
+  options: 
+  ‐ name: string 
+    value: string 
+  searches: []string 
+dnsPolicy: string # ClusterFirst,ClusterFirstWithHostNet,ClusterFirst,Default,None 
+hostNetwork: boolean 
+hostPID: boolean 
+hostIPC: boolean 
+shareProcessNamespace: boolean 
+serviceAccountName: string 
+automountServiceAccountToken: boolean 
+securityContext:
+  runAsUser: int64 
+  runAsNonRoot: boolean 
+  runAsGroup: int64 
+  supplementalGroups: []int64 
+  fsGroup: int64 
+  fsGroupChangePolicy: string 
+  seccompProfile: 
+    type: string 
+    localhostProfile: string 
+  seLinuxOptions: 
+    level: string 
+    role: string 
+    type: string 
+    user: string 
+sysctls: 
+  name: string 
+  value: value 
+windowsOptions: 
+  gmsaCredentialSpec: string 
+  gmsaCredentialSpecName: string 
+  runAsUserName: string 
+ephemeralContainers: []EphemeralContainer # Alpha功能
