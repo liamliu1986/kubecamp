@@ -90,17 +90,17 @@
                 
                 kubeadm:
 
-                    编写kube-admin.yaml
+编写kube-admin.yaml
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
-kubernetesVersion: 1.21.0
+kubernetesVersion: 1.23.5
 imageRepository: registry.cn-hangzhou.aliyuncs.com/google_containers
-clusterName: kubecamp
-controlPlaneEndpoint: "10.10.100.10:6443"
+clusterName: kubernetes
+controlPlaneEndpoint: "172.18.5.20:6443"
 networking:
     dnsDomain: kubecmap.com
-    podSubnet: 192.168.150.0/24
-    serviceSubnet: 192.168.151.0/24
+    podSubnet: 1.233.0.0/16
+    serviceSubnet: 1.234.0.0/16
 dns:
     type: CoreDNS
     imageRepository: coredns
@@ -110,7 +110,5 @@ dns:
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
 mode: ipvs
-
-                    kubeadm init --config=kubeadm-config.yaml --upload-certs     
 
                 部署完成
